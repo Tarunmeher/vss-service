@@ -542,6 +542,27 @@ router.delete('/deleteEvent', async function (req, res, next) {
   }
 });
 
+router.post('/createEnqury', async function (req, res, next) {
+  console.log(req.body)
+  const { std_name, mobile, standard, package } = req.body;
+  try {
+    const results = await db.executeQuery(
+      'INSERT INTO enquiry(std_name,mobile,standard,package, created_at) VALUES(?,?,?,?,?)',
+      [std_name, mobile, standard, package, new Date()]
+    );
+
+    if (results.affectedRows > 0) {
+      res.status(201).json({ status: 'success', message: 'Successfully' });
+    } else {
+      // In case of unexpected behavior
+      res.status(500).json({ status: 500, message: 'Enquiry creation failed due to an unknown error' });
+    }
+  } catch (err) {
+    console.error('Error fetching Enquiry:', err.message);
+    res.status(500).json({ message: 'Enquiry creation failed', status: 500 });
+  }
+});
+
 
 
 
