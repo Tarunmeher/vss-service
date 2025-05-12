@@ -563,6 +563,191 @@ router.post('/createEnqury', async function (req, res, next) {
   }
 });
 
+router.get('/getEnquires', async function (req, res, next) {
+  try {
+    const results = await db.executeQuery(
+      'SELECT * FROM enquiry;',
+      []
+    );
+    if (results.length) {
+      // Successfully created
+      res.status(201).json({ status: 'success', results: results });
+    } else {
+      // In case of unexpected behavior
+      res.status(404).json({ status: 200, message: 'No Enquiry Available' });
+    }
+  } catch (err) {
+    console.error('Error fetching enquiry:', err.message);
+    res.status(500).json({ message: 'Enquiry fetching failed', status: 500 });
+  }
+});
+
+router.delete('/deleteEnquiry', async function (req, res, next) {
+  const { id } = req.body;
+  try {
+    const results = await db.executeQuery(
+      "DELETE FROM enquiry WHERE id = ?;",
+      [id]
+    );
+
+    if (results.affectedRows > 0) {
+      res.status(201).json({ status: 'success', message: 'Deleted Successfully' });
+    } else {
+      // In case of unexpected behavior
+      res.status(500).json({ status: 500, message: 'Deleteion failed due to an unknown error' });
+    }
+
+  } catch (err) {
+    console.error('Error fetching enquiry:', err.message);
+    res.status(500).json({ message: 'Deletion failed', status: 500 });
+  }
+});
+
+
+
+/**Reqruitment Section */
+router.post('/createJob', async function (req, res, next) {
+  console.log(req.body)
+  const { post_name, description, last_date_of_application } = req.body;
+  try {
+    const results = await db.executeQuery(
+      'INSERT INTO vss_recruitment(post_name, description, last_date_of_application) VALUES(?,?,?)',
+      [post_name, description, last_date_of_application]
+    );
+    
+    if (results.affectedRows > 0) {
+      res.status(201).json({ status: 'success', message: 'Successfully' });
+    } else {
+      // In case of unexpected behavior
+      res.status(500).json({ status: 500, message: 'Job creation failed due to an unknown error' });
+    }
+  } catch (err) {
+    console.error('Error fetching Job:', err.message);
+    res.status(500).json({ message: 'Job creation failed', status: 500 });
+  }
+});
+
+router.put('/updateJob', async function (req, res, next) {
+  const { id, post_name, description, last_date_of_application } = req.body;
+  try {
+    const results = await db.executeQuery(
+      'UPDATE vss_recruitment SET post_name=?, description=?, last_date_of_application=? WHERE id=?;',
+      [post_name, description, last_date_of_application, id]
+    );
+
+    if (results.affectedRows > 0) {
+      // Successfully created
+      // const data = await db.executeQuery('SELECT * FROM event;', []);
+      res.status(201).json({ status: 'success', message: 'Job Updated Successfully', results: [] });
+    } else {
+      // In case of unexpected behavior
+      res.status(500).json({ status: 500, message: 'Job updation failed due to an unknown error' });
+    }
+  } catch (err) {
+    console.error('Error fetching Job:', err.message);
+    res.status(500).json({ message: 'Job updation failed', status: 500 });
+  }
+});
+
+router.get('/getJobs', async function (req, res, next) {
+  try {
+    const results = await db.executeQuery(
+      'SELECT * FROM vss_recruitment WHERE last_date_of_application>=current_date();',
+      []
+    );
+    if (results.length) {
+      // Successfully created
+      res.status(201).json({ status: 'success', results: results });
+    } else {
+      // In case of unexpected behavior
+      res.status(404).json({ status: 200, message: 'No Job Available' });
+    }
+  } catch (err) {
+    console.error('Error fetching job:', err.message);
+    res.status(500).json({ message: 'Job fetching failed', status: 500 });
+  }
+});
+
+router.delete('/deleteJob', async function (req, res, next) {
+  const { id } = req.body;
+  try {
+    const results = await db.executeQuery(
+      "DELETE FROM vss_recruitment WHERE id = ?;",
+      [id]
+    );
+
+    if (results.affectedRows > 0) {
+      res.status(201).json({ status: 'success', message: 'Deleted Successfully' });
+    } else {
+      // In case of unexpected behavior
+      res.status(500).json({ status: 500, message: 'Deleteion failed due to an unknown error' });
+    }
+
+  } catch (err) {
+    console.error('Error fetching job:', err.message);
+    res.status(500).json({ message: 'Deletion failed', status: 500 });
+  }
+});
+/**Reqruitment Section */
+
+/*Job Application Section*/
+router.post('/applyJob', upload.single('file'), async (req, res) => {
+  try {    
+    var recruitment_id = req.body.id;
+    var applicant_name = req.body.applicant_name;
+    var email = req.body.email;
+    var filename = req.file.filename;
+    const results = await db.executeQuery(
+      'INSERT INTO application(recruitment_id, applicant_name, email, filename) values(?,?,?,?);',
+      [recruitment_id, applicant_name, email, filename]
+    );
+    console.log(results)
+    if (results.affectedRows > 0) {
+      // Successfully created
+      res.status(201).json({ status: 'success', message: 'Applied Done !' });
+    } else {
+      const filePath = path.join(__dirname, `../uploads/${filename}`);
+      fs.unlink(filePath, async (err) => {
+        if (err) {
+          console.error('Error deleting notification file:', err);
+        }
+      });
+      // In case of unexpected behavior 
+      res.status(500).json({ status: 500, message: 'Failed due to an unknown error' });
+    }
+  } catch (err) {
+    const filePath = path.join(__dirname, `../uploads/${req.file.filename}`);
+    fs.unlink(filePath, async (err) => {
+      if (err) {
+        console.error('Error deleting notification file:', err);
+      }
+    });
+    res.send({
+      status: 'error',
+      message: 'Failed to Add',
+    });
+  }
+});
+
+router.get('/getApplications', async function (req, res, next) {
+  try {
+    const results = await db.executeQuery(
+      'SELECT * FROM application;',
+      []
+    );
+    if (results.length) {
+      // Successfully created
+      res.status(201).json({ status: 'success', results: results });
+    } else {
+      // In case of unexpected behavior
+      res.status(404).json({ status: 200, message: 'No Application Available' });
+    }
+  } catch (err) {
+    console.error('Error fetching job:', err.message);
+    res.status(500).json({ message: 'Job fetching failed', status: 500 });
+  }
+});
+
 
 
 
